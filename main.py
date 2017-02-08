@@ -2,10 +2,12 @@ from datetime import datetime, timedelta
 import json
 import requests
 
-
-DEFAULT_ORIGIN_IATA = "MOW"
+DEFAULT_ORIGIN_IATA = ["MOW", "LED"]
 MAX_TOTAL_PRICE = 20000
-MAX_BILL_PRICE = 4000
+MAX_BILL_PRICE_RU = 3000
+MAX_BILL_PRICE_EU = 2000
+MAX_BILL_PRICE_GENERIC = MAX_BILL_PRICE_RU
+ORIGIN_DATE_PERIOD = "2017-02-09:month"
 MIN_DAYS_PER_COUNTRY = 1
 MAX_DAYS_PER_COUNTRY = 7
 DATE_FORMAT = "%Y-%m-%d"
@@ -16,12 +18,16 @@ class TripMaker(object):
     result_cost = 0
     result_route = []
     world_cities_list = []
+    eu_airports_list = []
 
     def __init__(self):
         with open('data/world_cities.json', encoding="utf8") as data_file:
             self.world_cities_list = json.load(data_file)
+        eu_airports = open('data/eu_airports.data', 'r').read().splitlines()
+        self.eu_airports = [x.split("\t") for x in eu_airports]
 
-        self.find_lowest_price(DEFAULT_ORIGIN_IATA, [self.get_country(DEFAULT_ORIGIN_IATA)])
+        for origin_iata in DEFAULT_ORIGIN_IATA:
+            self.find_lowest_price(origin_iata, [self.get_country(origin_iata)])
 
         print("Best result: visited {} countries for {} rub. Route: {}".format(
             self.result_count, self.result_cost, self.result_route))
@@ -36,6 +42,12 @@ class TripMaker(object):
         if len(country) == 0:
             raise ValueError('IATA not found in cities base: "{}"'.format(iata))
         return country
+
+    def is_airport_european(self, iata):
+        for eu_airport in self.eu_airports:
+            if iata == eu_airport[0]:
+                return True
+        return False
 
     def is_same_countries(self, iata_1, iata_2):
         country_1, country_2 = "", ""
@@ -58,7 +70,7 @@ class TripMaker(object):
     def get_lowest_prices_list(self, origin_iata, date_from=None, date_to=None):
         prices = []
         if date_from is None:
-            period = "year"
+            period = ORIGIN_DATE_PERIOD
         else:
             period = datetime.strftime(date_from, DATE_FORMAT) + ":month"
             if date_to is not None:
@@ -106,25 +118,33 @@ class TripMaker(object):
                 print("[IGNORE:NOT_FOUND] " + str(e))
                 continue
 
+            if ((country_orig == "RU") | (country_dest == "RU")) & (flight["value"] > MAX_BILL_PRICE_RU):
+                print(("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): "
+                      "too expensive for Russia!").format(flight["origin"], flight["destination"], flight["value"]))
+                break
+            elif (self.is_airport_european(flight["origin"])) & (flight["value"] > MAX_BILL_PRICE_EU):
+                print(("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): "
+                      "too expensive for Europe!").format(flight["origin"], flight["destination"], flight["value"]))
+                break
+            elif flight["value"] > MAX_BILL_PRICE_GENERIC:
+                print(("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): "
+                      "too expensive!").format(flight["origin"], flight["destination"], flight["value"]))
+                break
+
             if country_dest in iata_visited_list:
-                # print("[IGNORE:ALREADY_VISITED] Ignore flight from {} to {} (for {} rub): {} already visited!".format(
-                #     flight["origin"], flight["destination"], flight["value"], country_dest))
+                print("[IGNORE:ALREADY_VISITED] Ignore flight from {} to {} (for {} rub): {} already visited!".format(
+                    flight["origin"], flight["destination"], flight["value"], country_dest))
                 continue
 
             if countries_are_same:
-                # print("[IGNORE:SAME_COUNTRY] Ignore flight from {} to {} (for {} rub): same country - {}!".format(
-                #     flight["origin"], flight["destination"], flight["value"], country_orig))
+                print("[IGNORE:SAME_COUNTRY] Ignore flight from {} to {} (for {} rub): same country - {}!".format(
+                    flight["origin"], flight["destination"], flight["value"], country_orig))
                 continue
 
-            if flight["value"] > MAX_BILL_PRICE:
-                # print("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): too expensive!".format(
-                #     flight["origin"], flight["destination"], flight["value"]))
-                break
-
             if flight["value"] + total_cost < MAX_TOTAL_PRICE:
-                print("Flying to {} ({}) for {} rub at {}!".format(flight["destination"], country_dest,
-                                                                   flight["value"], flight['depart_date']))
-
+                print("Flying from {} ({}) to {} ({}) for {} rub at {}!".format(flight["origin"], country_orig,
+                                                                            flight["destination"], country_dest,
+                                                                            flight["value"], flight['depart_date']))
                 visited_list = list(iata_visited_list)
                 visited_list.append(country_dest)
                 self.find_lowest_price(flight["destination"], visited_list,
