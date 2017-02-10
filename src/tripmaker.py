@@ -1,62 +1,11 @@
 # ----- System imports
 import json
 import pprint
-from datetime import datetime, timedelta
-from enum import Enum
+from datetime import timedelta
 
-# ----- Third-party imports
-import requests
-
-# ----- Functional constants
-
-# Главные (крупнейшие + наиболее близкие к Европе): MOW - Мск, LED - СПб
-# Второстепенные: KGD - Калининград, PKV - Псков, BZK - Брянск, EGO - Белгород, PES - Петрозаводск, VOZ - Воронеж,
-# VOG - Волгоград, ROV - Ростов, AER - Сочи, MCX - Махачкала, RTW - Саратов, KUF - Самара, KZN - Казань,
-# GOJ - Нижний Новгород
-DEFAULT_ORIGIN_IATA = ["MOW", "LED", "KGD", "PKV", "BZK", "EGO", "PES", "VOZ", "VOG", "ROV", "AER", "MCX", "RTW", "KUF",
-                       "KZN", "GOJ"]
-MAX_TOTAL_PRICE = 20000
-MAX_BILL_PRICE_RU = 4000
-MAX_BILL_PRICE_EU = 4000
-MAX_BILL_PRICE_INSIDE_COUNTRY = 500
-MAX_BILL_PRICE_GENERIC = MAX_BILL_PRICE_RU
-ORIGIN_DATE_PERIOD = "2017-02-11:month"
-MIN_DAYS_PER_COUNTRY = 1
-MAX_DAYS_PER_COUNTRY = 7
-DATE_FORMAT = "%Y-%m-%d"
-
-# ----- Application constants
-
-PATH_DATA_WORLD_CITIES = '../data/world_cities.json'
-PATH_DATA_EU_AIRPORTS = '../data/eu_airports.data'
-
-
-# ----- Entities
-
-class Flight(object):
-    class SeatClass(Enum):
-        economic = "economic"
-        business = "business"
-
-    def __init__(self, orig_city, dest_city, depart_date, price):
-        self.orig_city = orig_city
-        self.dest_city = dest_city
-        self.depart_date = depart_date
-        self.price = price
-        self.trip_class = Flight.SeatClass.economic
-
-    orig_city = None
-    dest_city = None
-    orig_country = None
-    dest_country = None
-    depart_date = None
-    price = None
-
-    return_date = None
-    trip_class = None
-    number_of_transfers = None
-    time_exceed_limit = None
-    gate = None
+# ----- Local imports
+from src.const.constants import *
+from src.model.fetching.asl.pricemap_fetching import get_lowest_prices_flights_list
 
 
 class TripMaker(object):
@@ -75,7 +24,7 @@ class TripMaker(object):
         self.eu_airports = [x.split("\t") for x in eu_airports]
 
         for orig_iata in list_orig_cities_iata:
-            list_flights = self.get_lowest_prices_flights_list(orig_iata)
+            list_flights = get_lowest_prices_flights_list(orig_iata)
             self.filter_flights(list_flights, {self.get_country(orig_iata)})
 
         print("Best result: visited {} countries for {} rub: {}".format(self.count_result,
@@ -100,62 +49,12 @@ class TripMaker(object):
                 return True
         return False
 
-    def is_same_countries(self, iata_1, iata_2):
-        country_1, country_2 = "", ""
-
-        for city in self.world_cities_list:
-            if city["code"] == iata_1:
-                country_1 = city["country_code"]
-                if len(country_2) > 0:
-                    break
-            if city["code"] == iata_2:
-                country_2 = city["country_code"]
-                if len(country_1) > 0:
-                    break
-        if len(country_1) == 0:
-            raise ValueError('IATA not found in cities base: "{}"'.format(iata_1))
-        if len(country_2) == 0:
-            raise ValueError('IATA not found in cities base: "{}"'.format(iata_2))
-        return country_1 == country_2, country_1, country_2
-
-    def get_lowest_prices_flights_list(self, orig_iata, date_from=None, date_to=None):
-        if date_from is None:
-            period = ORIGIN_DATE_PERIOD
-        else:
-            period = datetime.strftime(date_from, DATE_FORMAT) + ":month"
-
-        request = ("http://map.aviasales.ru/prices.json?origin_iata={orig_iata}&period={period}"
-                   "&one_way=true").format(orig_iata=orig_iata, period=period)
-        flights_data = requests.get(request).json()
-
-        flights = [Flight(f['origin'], f['destination'], datetime.strptime(f['depart_date'], DATE_FORMAT),
-                          f['value']) for f in flights_data]
-        if date_to is not None:
-            if date_to.month - date_from.month != 0:
-                flights.extend(self.get_lowest_prices_flights_list(orig_iata, date_to))
-            flights_filtered = []
-            # Filter dates
-            for f in flights:
-                if date_from <= f.depart_date <= date_to:
-                    flights_filtered.append(f)
-            flights = flights_filtered
-        # Array may be empty
-        if len(flights) > 0:
-            try:
-                return sorted(flights, key=lambda f: f.price, reverse=False)
-            except TypeError as e:
-                print("Strange thing happened. len(flights)={}, flights={}".format(len(flights), flights))
-                print(str(e))
-                return []
-        else:
-            return []
-
     def get_flights(self, list_flights_route, countries_visited, total_cost=0):
         flight_last = list_flights_route[-1]
 
         date_from = flight_last.depart_date + timedelta(days=MIN_DAYS_PER_COUNTRY)
         date_to = flight_last.depart_date + timedelta(days=MAX_DAYS_PER_COUNTRY)
-        list_flights = self.get_lowest_prices_flights_list(flight_last.dest_city,
+        list_flights = get_lowest_prices_flights_list(flight_last.dest_city,
                                                            date_from, date_to)
         self.filter_flights(list_flights, countries_visited, list_flights_route, total_cost)
 
