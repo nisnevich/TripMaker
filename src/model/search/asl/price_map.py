@@ -14,7 +14,7 @@ def get_lowest_prices_flights_list(orig_iata, date_from=None, date_to=None):
         if date_from is None:
             period = ORIGIN_DATE_PERIOD
         else:
-            period = datetime.strftime(date_from, DATE_FORMAT) + ":month"
+            period = datetime.strftime(date_from.replace(day=1), DATE_FORMAT) + ":month"
 
         request = ("http://map.aviasales.ru/prices.json?origin_iata={orig_iata}&period={period}"
                    "&one_way=true").format(orig_iata=orig_iata, period=period)

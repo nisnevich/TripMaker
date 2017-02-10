@@ -6,7 +6,7 @@ import time
 
 # ----- Local imports
 from src.const.constants import *
-from src.model.search.asl.latest_prices import get_lowest_prices_flights_list
+from src.model.search.asl.price_map import get_lowest_prices_flights_list
 from src.util.logging import Logger
 
 
@@ -120,8 +120,8 @@ class TripMaker(object):
 
         Logger.info("[COMPLETED] Count: {}, cost: {}, visited: {}".format(len(countries_visited),
                                                                           total_cost, countries_visited))
-        Logger.system("The route:")
-        Logger.system(self.pretty_printer.pformat([vars(obj) for obj in list_flights_route]))
+        Logger.info("The route:")
+        Logger.info(self.pretty_printer.pformat([vars(obj) for obj in list_flights_route]))
 
         if (len(countries_visited) > self.count_result) \
                 | ((len(countries_visited) == self.count_result) & (total_cost < self.cost_result)):

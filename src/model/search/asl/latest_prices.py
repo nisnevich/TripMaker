@@ -38,7 +38,7 @@ def get_lowest_prices_flights_list(orig_iata, date_from=None, date_to=None):
                            prefix='Searching flights from {} for {}:'.format(orig_iata, period), suffix='Completed',
                            length=50)
         if orig_iata == direction["iata"]:
-            # Yes, this is a real case ("Fly with AS API!")
+            # Yes, this is a real case. Fly with AS API!
             continue
         try:
             distance = DistanceUtil.get_city_distance(orig_iata, direction["iata"])
@@ -83,7 +83,7 @@ def get_lowest_prices_flights_list(orig_iata, date_from=None, date_to=None):
             return sorted(list_flights_cheapest, key=lambda f: f.price, reverse=False)
         except TypeError as e:
             Logger.error("Strange thing happened. len(flights)={}, flights={}".format(len(list_flights_cheapest),
-                                                                               list_flights_cheapest))
+                                                                                      list_flights_cheapest))
             Logger.error(str(e))
             return []
     else:
