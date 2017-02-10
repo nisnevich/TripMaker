@@ -7,6 +7,7 @@ import requests
 # ----- Local imports
 from src.const.constants import ORIGIN_DATE_PERIOD, DATE_FORMAT
 from src.entity.flight import Flight
+from src.util.logging import Logger
 
 
 def get_lowest_prices_flights_list(orig_iata, date_from=None, date_to=None):
@@ -35,8 +36,8 @@ def get_lowest_prices_flights_list(orig_iata, date_from=None, date_to=None):
             try:
                 return sorted(flights, key=lambda f: f.price, reverse=False)
             except TypeError as e:
-                print("Strange thing happened. len(flights)={}, flights={}".format(len(flights), flights))
-                print(str(e))
+                Logger.error("Strange thing happened. len(flights)={}, flights={}".format(len(flights), flights))
+                Logger.error(str(e))
                 return []
         else:
             return []
