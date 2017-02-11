@@ -1,10 +1,10 @@
 from datetime import datetime
 
 from src.const.constants import DATE_FORMAT
-from src.entity.flight import FlightDTOAdapter
+from src.entity.flight import IFlightDTOAdapter
 
 
-class ASFlightDTOAdapter(FlightDTOAdapter):
+class ASFlightDTOAdapter(IFlightDTOAdapter):
     origin = None
     destination = None
     depart_date = None

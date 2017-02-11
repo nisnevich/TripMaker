@@ -36,7 +36,7 @@ class Flight(object):
     gate = None
 
 
-class FlightDTOAdapter:
+class IFlightDTOAdapter:
     __metaclass__ = ABCMeta
 
     def __init__(self, flight_dict):
