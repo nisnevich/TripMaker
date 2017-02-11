@@ -18,14 +18,16 @@ MAX_BILL_PRICE_GENERIC = MAX_BILL_PRICE_RU
 # The value of 2000 for this parameter reduces the search time TENFOLD!
 MAX_CITY_DISTANCE = 2000
 
-ORIGIN_DATE_PERIOD = "2017-02-01:month"
+ORIGIN_DATE_PERIOD = "2017-03-01:month"
 MIN_DAYS_PER_COUNTRY = 1
 MAX_DAYS_PER_COUNTRY = 7
 DATE_FORMAT = "%Y-%m-%d"
 
 # ----- Application constants
-
-AS_ACCESS_TOKEN = "3bb88d0122282a9a02bdc94ff129fef9"
+# Main:
+# AS_ACCESS_TOKEN = "3bb88d0122282a9a02bdc94ff129fef9"
+# Left:
+AS_ACCESS_TOKEN = "2ca3d0f09ca5e1345cb6cca126154c47"
 TIMEOUT_SLEEP_CONNECTION_ERROR = 30
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))

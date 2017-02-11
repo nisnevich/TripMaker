@@ -20,20 +20,14 @@ class Logger(object):
     @staticmethod
     def info(message):
         Logger.__main_logger.info(message)
-        # Logger.__info.info(message)
         print(message)
 
     @staticmethod
     def error(message):
         Logger.__main_logger.error(message)
-        # Logger.__info.error(message)
-        # Logger.__error.error(message)
         print(message)
 
     @staticmethod
     def system(message):
         Logger.__main_logger.fatal(message)
-        # Logger.__info.fatal(message)
-        # Logger.__error.fatal(message)
-        # Logger.__system.fatal(message)
         print(message)

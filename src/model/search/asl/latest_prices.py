@@ -9,6 +9,7 @@ import requests
 from src.const.constants import ORIGIN_DATE_PERIOD, DATE_FORMAT, AS_ACCESS_TOKEN, MAX_CITY_DISTANCE, \
     TIMEOUT_SLEEP_CONNECTION_ERROR
 from src.entity.flight import Flight
+from src.model.search.asl.dto.flightadapter import ASFlightDTOAdapter
 from src.util.distance import DistanceUtil
 from src.util.logging import Logger
 from src.util.progressbar import print_progress_bar
@@ -63,8 +64,7 @@ def get_lowest_prices_flights_list(orig_iata, date_from=None, date_to=None):
 
         if len(flights_supported) > 0:
             f = flights_supported[0]
-            flight_cheapest = Flight(f['origin'], f['destination'],
-                                     datetime.strptime(f['depart_date'], DATE_FORMAT), f['value'])
+            flight_cheapest = Flight(ASFlightDTOAdapter(f))
             list_flights_cheapest.append(flight_cheapest)
 
     if date_to is not None:
