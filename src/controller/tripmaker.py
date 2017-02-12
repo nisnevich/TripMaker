@@ -24,23 +24,3 @@ Logger.info("Best result: visited {} countries for {} rub: {}".format(count_resu
                                                                       cost_result, countries_result))
 Logger.info("The route:")
 Logger.info(route_result.to_json())
-
-# RegEx:
-
-# datetime\.datetime\(([0-9]+), ([0-9]+), ([0-9]+), [0-9]+, [0-9]+\)
-# \1-\2-\3
-
-# Dates with one-digit month
-# ([0-9]{4}-)([0-9]{1})(-[0-9]{2})
-# \1(0)\2\3
-
-# Dates with one-digit day
-# ([0-9]{4}-[0-9]{2}-)([0-9]{1})[^0-9]
-# \1(0)\2
-
-# Dates with both one-digit month and day
-# ([0-9]{4}-)([0-9]{1}-)([0-9]{1})[^0-9]
-# \1(0)\2(0)\3
-
-# ,\r\n\s*?'trip_class': <SeatClass\.economic: 'economic'>
-# <empty>
