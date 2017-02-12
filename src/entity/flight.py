@@ -1,6 +1,7 @@
 # ----- System imports
 import json
 from abc import ABCMeta, abstractmethod
+from datetime import datetime
 from enum import Enum
 
 
@@ -17,10 +18,19 @@ class Flight(object):
             self.price = flight_dto.get_price()
 
     @staticmethod
-    def deserialize(serialized):
+    def deserialize(json_obj, date_format):
+        def datetime_parser(dct):
+            dct["depart_date"] = datetime.strptime(dct["depart_date"], date_format)
+            return dct
+
         flight = Flight()
-        flight.__dict__ = json.loads(serialized)
+        flight.__dict__ = json.loads(json_obj, object_hook=datetime_parser)
         return flight
+
+    def to_json(self, date_format):
+        return json.dumps(self.__dict__,
+                          default=lambda o: datetime.strftime(o, date_format) if isinstance(o, datetime)
+                          else format(o))
 
     orig_city = None
     dest_city = None

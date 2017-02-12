@@ -31,7 +31,10 @@ AS_ACCESS_TOKEN = "2ca3d0f09ca5e1345cb6cca126154c47"
 TIMEOUT_SLEEP_CONNECTION_ERROR = 30
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+INPUT_ROOT = os.path.join(PROJECT_ROOT, 'input')
 DATA_ROOT = os.path.join(PROJECT_ROOT, 'data')
+
 PATH_DATA_WORLD_CITIES = os.path.join(DATA_ROOT, 'world_cities.json')
 PATH_DATA_EU_AIRPORTS = os.path.join(DATA_ROOT, 'eu_airports.data')
-PATH_DATA_LOG = os.path.join(PROJECT_ROOT, 'logs')
+PATH_ROUTE_DUMP = os.path.join(INPUT_ROOT, 'route.dump')
+PATH_LOG = os.path.join(PROJECT_ROOT, 'logs')

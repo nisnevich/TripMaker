@@ -1,0 +1,12 @@
+[{"depart_date": datetime.datetime(2017, 2, 11, 0, 0),
+  "dest_city": "BCN",
+  "dest_country": "ES",
+  "orig_city": "MOW",
+  "orig_country": "RU",
+  "price": 135,},
+ {"depart_date": datetime.datetime(2017, 2, 15, 0, 0),
+  "dest_city": "ROM",
+  "dest_country": "IT",
+  "orig_city": "BCN",
+  "orig_country": "ES",
+  "price": 2892}]
