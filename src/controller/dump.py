@@ -4,8 +4,6 @@ import pprint
 import time
 
 # ----- Local imports
-from collections import namedtuple
-
 from src.const.constants import *
 from src.entity.flightroute import FlightsRoute
 from src.model.composing.dfs import DFSComposer
@@ -16,12 +14,16 @@ pretty_printer = pprint.PrettyPrinter()
 dfs_composer = DFSComposer()
 
 dump = open(PATH_ROUTE_DUMP, 'r').read()
-route_flights = FlightsRoute(json.loads(dump))
+route_flights = FlightsRoute.from_json(json.loads(dump))
 
-visited_countries = {(f.orig_country, f.dest_country) for f in route_flights}
-total_cost = sum([f.price for f in route_flights])
+visited_countries = set()
+total_cost = 0
+for f in route_flights:
+    visited_countries.add(f.orig_country)
+    visited_countries.add(f.dest_country)
+    total_cost += f.price
 
-orig_iata = route_flights[-1].orig_city
+orig_iata = route_flights[-1].dest_city
 start_time = time.time()
 list_flights = get_lowest_prices_flights_list(orig_iata)
 Logger.info(("Flights searching from {} for a '{}' period "

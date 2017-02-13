@@ -3,7 +3,7 @@ import re
 from src.util.progressbar import print_progress_bar
 
 PATH = "C:\\Users\\Arseniy\\PycharmProjects\\TripMaker\\results\\"
-INPUT_NAME = "mow_03_4-4.log"
+INPUT_NAME = "mow.002.log"
 list_input_lines = open(PATH + INPUT_NAME, 'r').read().splitlines()
 
 list_templates = [
