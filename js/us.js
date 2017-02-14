@@ -27,9 +27,11 @@ function getUrlParameter(sParam) {
 
 INTERVAL_CHECK_LOADING = 2000; // in ms
 DELTA_TIME_LOADING_XHR_MAX = 10000; // in ms
-timestamp_xhr_last_loading = 0;
+MIN_DELAY_RELOAD = 15000; // in ms
+timestamp_xhr_last_loading = -1;
 delta = Number(getUrlParameter("delta"));
 range = Number(getUrlParameter("range"));
+time_loaded = new Date();
 
 (function() {
     'use strict';
@@ -63,19 +65,33 @@ range = Number(getUrlParameter("range"));
     }
 
     addXMLRequestCallback(function (xhr) {
-        timestamp_xhr_last_loading = new Date();
+        if (xhr && xhr.url) {
+            if (xhr.url.includes("searches_results_united")) {
+                timestamp_xhr_last_loading = new Date();
+                console.log("TripMaker: Time refreshed.");
+            }
+        } else {
+            console.log("TripMaker: Look, an XHR without URL:");
+            console.log(xhr);
+        }
     });
 
     function checkLoadingStatus() {
         if (// if countdown timer is missing
-            $("div.countdown__timer").length === 0
-            // if time interval (DELTA_TIME_LOADING_XHR_MAX) since last XHR request was sent has exceeded
-            // && new Date() - timestamp_xhr_last_loading > DELTA_TIME_LOADING_XHR_MAX
+            // $("div.countdown__timer").length === 0
+            // if any XHR requests has been sent
+            timestamp_xhr_last_loading != -1
+            // if time interval since last XHR request has exceeded
+            && new Date() - timestamp_xhr_last_loading > DELTA_TIME_LOADING_XHR_MAX
             // if tickets are rendered
-            && $("div.ticket__container").length > 0
-            // if status of ticket is rendered
-            && $("div.prediction__advice").length > 0)
-        {
+            // && ($("div.ticket__container").length > 0
+                // or not found
+                // || $(".system-message").html().includes("Билеты не найдены"))
+            // if status of ticket is rendered ()
+            // && $("div.prediction__advice").length > 0
+            // to prevent our blocking on server, check that some time passed since page was loaded
+            // && new Date() - time_loaded > MIN_DELAY_RELOAD
+        ) {
             loadNext();
         } else {
             setTimeout(function(){checkLoadingStatus();}, INTERVAL_CHECK_LOADING);
@@ -103,7 +119,7 @@ range = Number(getUrlParameter("range"));
                 delta = 1; // to increment later
                 date.setMonth(month - 1, day + range + 1);
             } else {
-                // loading has finished
+                console.log("TripMaker: loading has finished");
                 return;
             }
         } else {
@@ -116,10 +132,8 @@ range = Number(getUrlParameter("range"));
 
         function addLeadZero(n){return n<10? '0'+n:''+n;}
         var path = "/" + orig_city + addLeadZero(date.getDate()) + addLeadZero(date.getMonth() + 1) + dest_city + count_person;
-        var href = window.location.origin + path + "?" + params;
-
-        window.location.href = href;
+        window.location.href = window.location.origin + path + "?" + params;
     }
 
-    loadNext();
+    checkLoadingStatus();
 })();
