@@ -18,6 +18,9 @@ class FlightsRoute(list):
     @staticmethod
     def from_json(list_flights_json):
         route = FlightsRoute()
-        for json_f in list_flights_json:
-            route.append(Flight.deserialize(json.dumps(json_f), DATE_FORMAT))
+        if isinstance(list_flights_json, list):
+            for json_f in list_flights_json:
+                route.append(Flight.deserialize(json.dumps(json_f), DATE_FORMAT))
+        else:
+            route.append(Flight.deserialize(json.dumps(list_flights_json), DATE_FORMAT))
         return route

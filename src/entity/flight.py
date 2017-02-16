@@ -16,6 +16,7 @@ class Flight(object):
             self.dest_city = flight_dto.get_dest_city()
             self.depart_date = flight_dto.get_depart_date()
             self.price = flight_dto.get_price()
+            self.found_at = flight_dto.get_found_at()
 
     @staticmethod
     def deserialize(json_obj, date_format):
@@ -38,6 +39,7 @@ class Flight(object):
     dest_country = None
     depart_date = None
     price = None
+    found_at = None
 
     return_date = None
     trip_class = None
@@ -66,4 +68,8 @@ class IFlightDTOAdapter:
 
     @abstractmethod
     def get_price(self):
+        pass
+
+    @abstractmethod
+    def get_found_at(self):
         pass

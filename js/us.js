@@ -26,8 +26,9 @@ function getUrlParameter(sParam) {
 }
 
 INTERVAL_CHECK_LOADING = 2000; // in ms
-DELTA_TIME_LOADING_XHR_MAX = 10000; // in ms
-MIN_DELAY_RELOAD = 15000; // in ms
+MIN_DELAY_RELOAD_SINCE_LAST_XHR = 20000; // in ms
+
+MIN_DELAY_RELOAD_SINCE_PAGE_LOAD = 15000; // in ms
 timestamp_xhr_last_loading = -1;
 delta = Number(getUrlParameter("delta"));
 range = Number(getUrlParameter("range"));
@@ -78,11 +79,11 @@ time_loaded = new Date();
 
     function checkLoadingStatus() {
         if (// if countdown timer is missing
-            // $("div.countdown__timer").length === 0
+             $("div.countdown__timer").length === 0
             // if any XHR requests has been sent
-            timestamp_xhr_last_loading != -1
+            && timestamp_xhr_last_loading != -1
             // if time interval since last XHR request has exceeded
-            && new Date() - timestamp_xhr_last_loading > DELTA_TIME_LOADING_XHR_MAX
+            && new Date() - timestamp_xhr_last_loading > MIN_DELAY_RELOAD_SINCE_LAST_XHR
             // if tickets are rendered
             // && ($("div.ticket__container").length > 0
                 // or not found
@@ -90,7 +91,7 @@ time_loaded = new Date();
             // if status of ticket is rendered ()
             // && $("div.prediction__advice").length > 0
             // to prevent our blocking on server, check that some time passed since page was loaded
-            // && new Date() - time_loaded > MIN_DELAY_RELOAD
+            // && new Date() - time_loaded > MIN_DELAY_RELOAD_SINCE_PAGE_LOAD
         ) {
             loadNext();
         } else {

@@ -2,7 +2,7 @@ import json
 import math
 
 from src.const.constants import PATH_DATA_WORLD_CITIES
-from src.util.logging import Logger
+from src.util.log import Logger
 
 
 class DistanceUtil(object):

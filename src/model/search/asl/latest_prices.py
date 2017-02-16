@@ -11,7 +11,7 @@ from src.const.constants import ORIGIN_DATE_PERIOD, DATE_FORMAT, AS_ACCESS_TOKEN
 from src.entity.flight import Flight
 from src.model.search.asl.dto.flightadapter import ASFlightDTOAdapter
 from src.util.distance import DistanceUtil
-from src.util.logging import Logger
+from src.util.log import Logger
 from src.util.progressbar import print_progress_bar
 
 

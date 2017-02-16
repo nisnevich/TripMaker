@@ -9,6 +9,7 @@ class ASFlightDTOAdapter(IFlightDTOAdapter):
     destination = None
     depart_date = None
     value = None
+    found_at = None
 
     def get_orig_city(self):
         return self.origin
@@ -21,6 +22,9 @@ class ASFlightDTOAdapter(IFlightDTOAdapter):
 
     def get_price(self):
         return self.value
+
+    def get_found_at(self):
+        return self.found_at
 
     def __init__(self, flight_dict):
         super().__init__(flight_dict)
