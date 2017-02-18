@@ -1,0 +1,128 @@
+[
+    {
+        "depart_date": "2017-03-06",
+        "dest_city": "INI",
+        "dest_country": "RS",
+        "found_at": "2017-02-15T17:37:17Z",
+        "orig_city": "BTS",
+        "orig_country": "SK",
+        "price": 487
+    },
+    ?{
+        "depart_date": "2017-03-10",
+        "dest_city": "EIN",
+        "dest_country": "NL",
+        "found_at": "2017-02-15T18:35:34Z",
+        "orig_city": "INI",
+        "orig_country": "RS",
+        "price": 1635
+    },
+    {
+        "depart_date": "2017-03-14",
+        "dest_city": "SOF",
+        "dest_country": "BG",
+        "found_at": "2017-02-15T18:37:43Z",
+        "orig_city": "EIN",
+        "orig_country": "NL",
+        "price": 610
+    },
+    <->{
+        "depart_date": "2017-03-17",
+        "dest_city": "EAP",
+        "dest_country": "CH",
+        "found_at": "2017-02-15T17:43:38Z",
+        "orig_city": "SOF",
+        "orig_country": "BG",
+        "price": 831
+    },
+    <->{
+        "depart_date": "2017-03-19",
+        "dest_city": "LON",
+        "dest_country": "GB",
+        "found_at": "2017-02-15T17:45:15Z",
+        "orig_city": "EAP",
+        "orig_country": "CH",
+        "price": 836
+    },
+    {
+        "depart_date": "2017-03-22",
+        "dest_city": "TLS",
+        "dest_country": "FR",
+        "found_at": "2017-02-15T17:48:11Z",
+        "orig_city": "LON",
+        "orig_country": "GB",
+        "price": 719
+    },
+    {
+        "depart_date": "2017-03-23",
+        "dest_city": "BRU",
+        "dest_country": "BE",
+        "found_at": "2017-02-15T12:05:24Z",
+        "orig_city": "TLS",
+        "orig_country": "FR",
+        "price": 597
+    },
+    {
+        "depart_date": "2017-03-24",
+        "dest_city": "GDN",
+        "dest_country": "PL",
+        "found_at": "2017-02-15T13:51:35Z",
+        "orig_city": "BRU",
+        "orig_country": "BE",
+        "price": 1210
+    },
+    {
+        "depart_date": "2017-03-28",
+        "dest_city": "OSL",
+        "dest_country": "NO",
+        "found_at": "2017-02-15T08:58:13Z",
+        "orig_city": "GDN",
+        "orig_country": "PL",
+        "price": 461
+    },
+    {
+        "depart_date": "2017-03-29",
+        "dest_city": "VNO",
+        "dest_country": "LT",
+        "found_at": "2017-02-15T19:46:09Z",
+        "orig_city": "OSL",
+        "orig_country": "NO",
+        "price": 878
+    },
+    {
+        "depart_date": "2017-04-02",
+        "dest_city": "BLL",
+        "dest_country": "DK",
+        "found_at": "2017-02-15T22:37:35Z",
+        "orig_city": "VNO",
+        "orig_country": "LT",
+        "price": 700
+    },
+    {
+        "depart_date": "2017-04-04",
+        "dest_city": "BUD",
+        "dest_country": "HU",
+        "found_at": "2017-02-15T22:43:44Z",
+        "orig_city": "BLL",
+        "orig_country": "DK",
+        "price": 1373
+    },
+    {
+        "depart_date": "2017-04-11",
+        "dest_city": "MIL",
+        "dest_country": "IT",
+        "found_at": "2017-02-13T10:43:42Z",
+        "orig_city": "BUD",
+        "orig_country": "HU",
+        "price": 1488
+    },
+    {
+        "depart_date": "2017-04-16",
+        "dest_city": "BUH",
+        "dest_country": "RO",
+        "found_at": "2017-02-15T09:29:31Z",
+        "orig_city": "MIL",
+        "orig_country": "IT",
+        "price": 1300
+    }
+]

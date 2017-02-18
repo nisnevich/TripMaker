@@ -134,5 +134,5 @@ class RussiaDeparturesComposer:
             for orig_iata in orig_iata_list:
                 Logger.debug("Scanning " + orig_iata)
                 self.filter_flights(orig_iata, origin_period, date_from, date_to)
-                time.sleep(5)
+                # time.sleep(5)
             date_counter += 1

@@ -20,6 +20,7 @@ class BrowserUtil:
 
         if range_value > 0:
             url += "?delta=0&range={range_value}".format(range_value=range_value)
+        url += "#default_price={}".format(f.price)
 
         return url.format(orig=f.orig_city, dest=f.dest_city,
                           date=datetime.strftime(f.depart_date, "%d%m"))
