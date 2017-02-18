@@ -47,74 +47,59 @@ class DFSComposer:
             Logger.system(route_flights.to_json())
             return
 
-    def filter_flights(self, list_flights, countries_visited, route_flights=FlightsRoute(),
+    def start(self):
+        '''
+            Time estimation
+        '''
+
+    def filter_flights(self,
+                       # ACTUAL
+                       city_orig,
+                       filters,
+                       callback_finish,
+
+                       # Leveled by the graph
+                       list_flights,
+                       # Filtration
+                       countries_visited,
+                       # Leveled by the graph
+                       route_flights=FlightsRoute(),
+                       # Filtration
                        total_cost=0, stop_list=[], target_country=None):
+        '''
+            1) [if not exists] Create graph
+            2) Add city to graph
+            3) Log that the city was visited
+            Logger.info(
+                "Flying from {} ({}) to {} ({}) for {} rub at {}!".format(flight.orig_city, flight.orig_country,
+                                                                          flight.dest_city, flight.dest_country,
+                                                                          flight.price, flight.depart_date))
+        '''
         for flight in list_flights:
-            delta_time = time.time() - self.start_time
-            if self.is_timing_activated & (delta_time > self.timing_value):
-                Logger.debug("Stopping DFS as time limit ({} sec) "
-                             "has exceeded ({} passed)".format(self.timing_value, delta_time))
-                return self.finish()
+            '''
+                Filtration
 
-            try:
-                flight.orig_country = CountryUtil.get_country(flight.orig_city)
-                flight.dest_country = CountryUtil.get_country(flight.dest_city)
-            except ValueError as e:
-                Logger.debug("[IGNORE:NOT_FOUND] " + str(e))
-                continue
+                Check:
+                1) stop_list=[],
+                2) target_country=None
+                etc...
 
-            if flight.dest_country == target_country:
-                Logger.info(("[ATTENTION:TARGET_COUNTRY] Make an attention on the flight from {} to {} (for {} rub): "
-                              "{} is in a {}, the target country!").format(flight.orig_city, flight.dest_city,
-                                                               flight.price, flight.orig_city, flight.orig_country))
-                Logger.info(FlightsRoute(*route_flights, flight).to_json())
+                P.S.: use the graph to check price
 
-            if flight.dest_country in stop_list:
-                Logger.debug(("[IGNORE:DENIED_COUNTRY] Breaking trip on the flight from {} to {} (for {} rub): "
-                              "found {} in stop list!").format(flight.orig_city, flight.dest_city,
-                                                               flight.price, flight.dest_country))
-                Logger.info(FlightsRoute(*route_flights, flight).to_json())
-                continue
+            '''
 
-            if (flight.orig_country == "RU") | (flight.dest_country == "RU"):
-                if flight.price > MAX_BILL_PRICE_RU:
-                    Logger.debug(("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): "
-                                  "too expensive for Russia!").format(flight.orig_city, flight.dest_city, flight.price))
-                    break
-            elif CountryUtil.is_airport_european(flight.orig_city):
-                if flight.price > MAX_BILL_PRICE_EU:
-                    Logger.debug(("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): "
-                                  "too expensive for Europe!").format(flight.orig_city, flight.dest_city, flight.price))
-                    break
-            elif flight.price > MAX_BILL_PRICE_GENERIC:
-                Logger.debug(("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): "
-                              "too expensive!").format(flight.orig_city, flight.dest_city, flight.price))
-                break
+            '''
+                if filter passed successfully:
 
-            if (flight.orig_country == flight.dest_country) & (flight.price <= MAX_BILL_PRICE_INSIDE_COUNTRY):
-                Logger.debug(("[ATTENTION:VISIT_INSIDE] Allowed flight from {} to {} (both in {}): "
-                              "the price is {}!").format(flight.orig_city, flight.dest_city,
-                                                         flight.dest_country, flight.price))
-            elif flight.dest_country in countries_visited:
-                Logger.debug(("[IGNORE:ALREADY_VISITED] Ignore flight from {} to {} (for {} rub): "
-                              "{} already visited!").format(flight.orig_city, flight.dest_city, flight.price,
-                                                            flight.dest_country))
-                continue
+                flights_history_extended: nivelated
+            '''
 
-            if flight.price + total_cost < MAX_TOTAL_PRICE:
-                Logger.info(
-                    "Flying from {} ({}) to {} ({}) for {} rub at {}!".format(flight.orig_city, flight.orig_country,
-                                                                              flight.dest_city, flight.dest_country,
-                                                                              flight.price, flight.depart_date))
-                flights_history_extended = FlightsRoute(*route_flights)
-                flights_history_extended.append(flight)
-                countries_visited_extended = OrderedSet(countries_visited)
-                countries_visited_extended.add(flight.dest_country)
-                cost = flight.price + total_cost
+            self.get_flights(flight.orig_city)
 
-                self.get_flights(flights_history_extended, countries_visited_extended, cost)
-            else:
-                break
+        '''
+            finish callback
+        '''
+
         if total_cost > 0:
             Logger.info("[COMPLETED] Count: {}, c/c: {}, cost: {}, "
                         "visited: {}".format(len(countries_visited), round(total_cost/len(countries_visited)),
@@ -124,6 +109,9 @@ class DFSComposer:
         else:
             Logger.info("[COMPLETED] Nothing found")
 
+        '''
+            this thing is generator-specific (leave as is)
+        '''
         if (len(countries_visited) > self.count_result) \
                 | ((len(countries_visited) == self.count_result) & (total_cost < self.cost_result)):
             self.count_result = len(countries_visited)
