@@ -1,17 +1,20 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
+from src.entity.flight import Flight
+
 G = nx.MultiDiGraph()
 
-G.add_node("LED")
-G.add_node("MOW")
-G.add_node("BER")
+G.add_node("LED", flight=Flight())
+G.add_node("MOW", flight=Flight())
+node = G.add_node("BER", flight=Flight())
 
 # G.add_edge("LED", "MOW", attr_dict={"date": "2017-02-25"})
 # G.add_edge("LED", "MOW", date="2017-02-27")
-# G.add_edge("LED", "BER", date="2017-02-25")
+G.add_edge("LED", "BER", date="2017-02-25")
 
 G.add_edges_from([("LED", "MOW", 1, dict(date="2017-02-25")), ("LED", "MOW", 2, dict(date="2017-02-27"))])
+print(G.node["LED"]["flight"])
 
 pos = nx.spring_layout(G)
 
@@ -27,7 +30,6 @@ labels_edges = {}
 for edge in G.edges():
     labels_edges[edge] = edge
 nx.draw_networkx_edge_labels(G, pos, labels=labels_edges, font_size=12, font_color='green')
-
 
 # plt.axis('off')
 # plt.show()
