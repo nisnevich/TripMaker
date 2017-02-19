@@ -29,3 +29,10 @@ class CountryUtil:
             if iata == eu_airport[0]:
                 return True
         return False
+
+    @staticmethod
+    def get_info(iata):
+        for city in CountryUtil.world_cities_list:
+            if city["code"] == iata:
+                return city
+        return None
