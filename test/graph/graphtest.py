@@ -1,20 +1,28 @@
 import networkx as nx
-import matplotlib.pyplot as plt
 
 from src.entity.flight import Flight
 
 G = nx.MultiDiGraph()
 
-G.add_node("LED", flight=Flight())
-G.add_node("MOW", flight=Flight())
-node = G.add_node("BER", flight=Flight())
+G.add_node("LED", country="RU")
+G.add_node("MOW", country="RU")
+G.add_node("BER", country="DE")
+G.add_node("KJA", country="RU")
 
-# G.add_edge("LED", "MOW", attr_dict={"date": "2017-02-25"})
-# G.add_edge("LED", "MOW", date="2017-02-27")
-G.add_edge("LED", "BER", date="2017-02-25")
+G.add_edge("KJA", "LED", flight=Flight())
+G.add_edge("LED", "BER", flight=Flight())
 
 G.add_edges_from([("LED", "MOW", 1, dict(date="2017-02-25")), ("LED", "MOW", 2, dict(date="2017-02-27"))])
-print(G.node["LED"]["flight"])
+
+node = "LED"
+print(node)  # LED
+print(G.node[node])  # {'country': 'RU'}
+print(G.in_edges(node))  # [('KJA', 'LED')]
+print(G.out_edges(node))  # [('LED', 'BER'), ('LED', 'MOW'), ('LED', 'MOW')]
+print(G.neighbors(node))  # ['BER', 'MOW']
+print(G.in_edges())  # [('LED', 'MOW'), ('LED', 'MOW'), ('LED', 'BER'), ('KJA', 'LED')]
+
+
 
 pos = nx.spring_layout(G)
 

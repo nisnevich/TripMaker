@@ -20,6 +20,7 @@ class GoogleMapPlotter(object):
         self.zoom = int(zoom)
         self.grids = None
         self.paths = []
+        self.alerts = []
         self.shapes = []
         self.points = []
         self.heatmap_points = []
@@ -174,6 +175,15 @@ class GoogleMapPlotter(object):
         shape = zip(lats, lngs)
         self.shapes.append((shape, settings))
 
+    def alert(self, message):
+        self.alerts.append(message)
+
+    def write_alerts(self, f):
+        for alert in self.alerts:
+            f.write('''
+alert(\"''' + alert + '''\")
+            ''')
+
     # create the html file which include one google map and all points and
     # paths
     def draw(self, htmlfile):
@@ -194,6 +204,7 @@ class GoogleMapPlotter(object):
         self.write_paths(f)
         self.write_shapes(f)
         self.write_heatmap(f)
+        self.write_alerts(f)
         f.write('\t}\n')
         f.write('</script>\n')
         f.write('</head>\n')
@@ -354,7 +365,7 @@ icons: [{
 
         if len(strokeText) > 0:
             f.write('''
-function polylineMouseOver(polyline, event) {
+function polylineMouseOver(polyline, event, strokeText) {
     if (selectedPath) {
         if (selectedPath == polyline) {
             return;
@@ -364,16 +375,16 @@ function polylineMouseOver(polyline, event) {
     polyline.setOptions({strokeWeight: polyline.strokeWeight * ''' + str(strokeDeltaWeight) + '''});
     selectedPath = polyline;
     infoWindow.setPosition(event.latLng);
-    infoWindow.setContent(\"<b>''' + str(strokeText) + '''</b>\");
+    infoWindow.setContent(\"<b>\" + strokeText + \"</b>\");
     infoWindow.open(map);
 }
 
 google.maps.event.addListener(lineSymbol, 'mouseover', function(e) {
-    polylineMouseOver(this, e);
+    polylineMouseOver(this, e, \"''' + str(strokeText) + '''\");
 });
 
 google.maps.event.addListener(Path, 'mouseover', function(e) {
-    polylineMouseOver(this, e);
+    polylineMouseOver(this, e, \"''' + str(strokeText) + '''\");
 });
 
 google.maps.event.addListener(lineSymbol, 'click', function(e) {
@@ -386,8 +397,7 @@ google.maps.event.addListener(Path, 'click', function(e) {
 
 google.maps.event.addListener(Path, 'mouseout', function(e) {
     //this.setOptions({strokeWeight: this.strokeWeight / ''' + str(strokeDeltaWeight) + '''})
-});
-        ''')
+});''')
 
     def write_polygon(self, f, path, settings):
         clickable = False

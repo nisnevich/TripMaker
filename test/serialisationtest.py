@@ -3,7 +3,7 @@ import json
 from src.const.constants import PATH_LOG
 from src.entity.flight import Flight
 from src.entity.flightroute import FlightsRoute
-from src.model.search.asl.dto.flightadapter import ASFlightDTOAdapter
+from src.model.requesting.asl.dto.flightadapter import ASFlightDTOAdapter
 
 f_json = '''{
     "value": 939,

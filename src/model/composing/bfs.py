@@ -8,7 +8,7 @@ from src.const.constants import MIN_DAYS_PER_COUNTRY, MAX_DAYS_PER_COUNTRY, MAX_
     MAX_BILL_PRICE_GENERIC, MAX_BILL_PRICE_INSIDE_COUNTRY, MAX_TOTAL_PRICE
 from src.entity.flight import Flight
 from src.entity.flightroute import FlightsRoute
-from src.model.search.asl.price_map import get_lowest_prices_flights_list
+from src.model.requesting.asl.price_map import get_lowest_prices_flights_list
 from src.util.country import CountryUtil
 from src.util.log import Logger
 

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from src.const.constants import AS_ACCESS_TOKEN, PATH_ROUTE_DUMP, DATE_FORMAT
 from src.entity.flight import Flight
 from src.entity.flightroute import FlightsRoute
-from src.model.search.asl.dto.flightadapter import ASFlightDTOAdapter
+from src.model.requesting.asl.dto.flightadapter import ASFlightDTOAdapter
 
 
 def get_flights_month(orig_iata, dest_iata, date_from=None):

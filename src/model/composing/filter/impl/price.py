@@ -1,31 +1,26 @@
 import time
 
-from src.model.composing.filter.filter import GeneratorFilter
+from src.model.composing.filter.filter_abstract import FlightFilter
+from src.util.country import CountryUtil
 from src.util.log import Logger
 
 
-class PriceGeneratorFilter(GeneratorFilter):
-    time_start = 0
-    timeout = 0
+class PriceFlightFilter(FlightFilter):
 
-    def __init__(self, timeout):
-        super().__init__()
-        self.timeout = timeout
-
-    def do_filter(self, graph_city, node_city):
-
-        if (flight.orig_country == "RU") | (flight.dest_country == "RU"):
-            if flight.price > MAX_BILL_PRICE_RU:
+    def filter_break(self, flight, list_flights, graph):
+        if ((flight.orig_country == "RU") | (flight.dest_country == "RU")) \
+                & (flight.price > self.max_bill_price_ru):
+            if flight.price > self.max_bill_price_ru:
                 Logger.debug(("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): "
                               "too expensive for Russia!").format(flight.orig_city, flight.dest_city, flight.price))
-                break
-        elif CountryUtil.is_airport_european(flight.orig_city):
-            if flight.price > MAX_BILL_PRICE_EU:
+                return False
+        if CountryUtil.is_airport_european(flight.orig_city):
+            if flight.price > self.max_bill_price_eu:
                 Logger.debug(("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): "
                               "too expensive for Europe!").format(flight.orig_city, flight.dest_city, flight.price))
-                break
-        elif flight.price > MAX_BILL_PRICE_GENERIC:
+                return False
+        if flight.price > self.max_bill_price_generic:
             Logger.debug(("[IGNORE:HIGH_PRICE] Breaking trip on the flight from {} to {} (for {} rub): "
                           "too expensive!").format(flight.orig_city, flight.dest_city, flight.price))
-            break
+            return False
         return True

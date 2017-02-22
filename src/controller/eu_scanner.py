@@ -3,9 +3,16 @@ import pprint
 
 # ----- Local imports
 import time
+from datetime import datetime
 
 from src.const.constants import *
 from src.model.composing.dfs import DFSComposer
+from src.model.composing.filter.impl.country_visited_exclude_cheap import VisitedCountryExcludeCheapFlightFilter
+from src.model.composing.filter.impl.esoteric.price_stupid import StupidPriceFlightFilter
+from src.model.composing.filter.impl.price import PriceFlightFilter
+from src.model.composing.filter.impl.price_total import TotalPriceFlightFilter
+from src.model.composing.filter.impl.timeout import TimeoutFlightFilter
+from src.model.requesting.configuration.configuration_requester import RequesterConfiguration
 from src.util.browser import BrowserUtil
 from src.util.gmail_api import GmailAPIUtil
 from src.util.log import Logger
@@ -31,7 +38,7 @@ TripMaker bot
 '''
 
 
-MAX_SEARCH_TIME_PER_PERIOD = 240
+MAX_SEARCH_TIME_PER_PERIOD = 60
 
 CHECK_ONLY_BIGGEST = True
 
@@ -46,7 +53,10 @@ biggest_eu_airports_list = ['BRU', 'SOF', 'BLL', 'CPH', 'CGN', 'GDN', 'VIE', 'PF
                             'SKG', 'BUD', 'DUB', 'SNN', 'BLQ', 'PSA', 'VNO', 'TGD', 'EIN', 'OSL', 'KTW', 'KRK', 'WAW',
                             'WRO', 'FAO', 'OPO', 'TSR', 'BTS', 'ALC', 'BCN', 'MAD', 'MAN']
 
-date_period_list = ["2017-02-01:month", "2017-03-01:month", "2017-04-01:month"]
+date_period_list = [datetime(2017, 2, 23), datetime(2017, 3, 1), datetime(2017, 4, 23)]
+list_filters = [PriceFlightFilter(), StupidPriceFlightFilter(), VisitedCountryExcludeCheapFlightFilter(),
+                TotalPriceFlightFilter(), TimeoutFlightFilter(MAX_SEARCH_TIME_PER_PERIOD)]
+
 list_big_airports = OrderedSet()
 
 best_count_result = 0
@@ -67,13 +77,18 @@ for airport in eu_airports:
         time_start_period = time.time()
 
         Logger.info("For airport {} selected period: {}".format(orig_iata, date_period))
-        try:
-            count_result, cost_result, countries_result, route_result = \
-                DFSComposer().start(orig_iata, date_period, True, MAX_SEARCH_TIME_PER_PERIOD)
-        except Exception as e:
-            Logger.error("Caught very broad exception while processing {} for period {}. "
-                         "Exception: {}".format(orig_iata, date_period, str(e)))
-            continue
+        configuration_requester = RequesterConfiguration(date_period)
+        # try:
+        dfs_composer = DFSComposer()
+        graph = dfs_composer.find_flights(orig_iata, configuration_requester, list_filters)
+        count_result, cost_result, countries_result, route_result = dfs_composer.count_result, \
+                                                                    dfs_composer.cost_result, \
+                                                                    dfs_composer.countries_result, \
+                                                                    dfs_composer.list_flights
+        # except Exception as e:
+        #     Logger.error("Caught very broad exception while processing {} for period {}. "
+        #                  "Exception: {}".format(orig_iata, date_period, str(e)))
+        #     continue
 
         if (len(countries_result) > period_count_result) \
                 | ((len(countries_result) == period_count_result) & (cost_result < period_cost_result)):
