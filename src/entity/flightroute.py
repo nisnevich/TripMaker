@@ -3,6 +3,7 @@ from datetime import datetime
 
 from src.const.constants import DATE_FORMAT
 from src.entity.flight import Flight
+from src.util.orderedset import OrderedSet
 
 
 class FlightsRoute(list):
@@ -24,3 +25,16 @@ class FlightsRoute(list):
         else:
             route.append(Flight.deserialize(json.dumps(list_flights_json), DATE_FORMAT))
         return route
+
+    def get_price_total(self):
+        total_price = 0
+        for f in self:
+            total_price += f.price
+        return total_price
+
+    def get_countries_visited(self):
+        countries_visited = OrderedSet()
+        for f in self:
+            countries_visited.add(f.orig_country)
+            countries_visited.add(f.dest_country)
+        return countries_visited

@@ -4,17 +4,24 @@ import pprint
 # ----- Local imports
 import time
 from datetime import datetime
+import matplotlib.pyplot as plt
+
+import networkx as nx
 
 from src.const.constants import *
 from src.model.composing.dfs import DFSComposer
 from src.model.composing.filter.impl.country_visited_exclude_cheap import VisitedCountryExcludeCheapFlightFilter
+from src.model.composing.filter.impl.edge_visited import VisitedEdgeFlightFilter
+from src.model.composing.filter.impl.edge_visited_global import VisitedGlobalEdgeFlightFilter
 from src.model.composing.filter.impl.esoteric.price_stupid import StupidPriceFlightFilter
 from src.model.composing.filter.impl.price import PriceFlightFilter
 from src.model.composing.filter.impl.price_total import TotalPriceFlightFilter
 from src.model.composing.filter.impl.timeout import TimeoutFlightFilter
+from src.model.composing.ucs import UCSComposer
 from src.model.requesting.configuration.configuration_requester import RequesterConfiguration
 from src.util.browser import BrowserUtil
 from src.util.gmail_api import GmailAPIUtil
+from src.util.graphutil import GraphUtil
 from src.util.log import Logger
 from src.util.orderedset import OrderedSet
 
@@ -37,10 +44,28 @@ Search links:
 TripMaker bot
 '''
 
+MAX_UCS_SEARCH_TIME_PER_PERIOD = 60
+MAX_DFS_SEARCH_TIME_PER_PERIOD = 255 * 2
+MAX_DFS_SEARCH_TIME_PER_INSTANCE = 25
+MIN_DFS_SEARCH_TIME_PER_INSTANCE = 15
 
-MAX_SEARCH_TIME_PER_PERIOD = 60
+MIN_MERGING_COUNT = 10
+MAX_MERGING_CC = 1300
+# MIN_MERGING = [
+#     {"count": 10, "cc": 1200},
+#     {"count": 8, "cc": 900}
+# ]
 
-CHECK_ONLY_BIGGEST = True
+CHECK_ONLY_BIGGEST = False
+GRAPH_MERGING_ACTIVATED = True
+DRAWING_ACTIVATED = True
+
+
+def get_actual_filters(graph_global, timeout=MAX_UCS_SEARCH_TIME_PER_PERIOD):
+    return [PriceFlightFilter(), StupidPriceFlightFilter(), VisitedCountryExcludeCheapFlightFilter(),
+            TotalPriceFlightFilter(), VisitedEdgeFlightFilter(), TimeoutFlightFilter(timeout)]
+    # VisitedGlobalEdgeFlightFilter(graph_global)
+
 
 pretty_printer = pprint.PrettyPrinter()
 
@@ -52,17 +77,20 @@ eu_airports = [x.split("\t") for x in eu_airports_list]
 biggest_eu_airports_list = ['BRU', 'SOF', 'BLL', 'CPH', 'CGN', 'GDN', 'VIE', 'PFO', 'OSR', 'TLS', 'FRA', 'FMM', 'ATH',
                             'SKG', 'BUD', 'DUB', 'SNN', 'BLQ', 'PSA', 'VNO', 'TGD', 'EIN', 'OSL', 'KTW', 'KRK', 'WAW',
                             'WRO', 'FAO', 'OPO', 'TSR', 'BTS', 'ALC', 'BCN', 'MAD', 'MAN']
+# biggest_eu_airports_list = ['OSR']
 
 date_period_list = [datetime(2017, 2, 23), datetime(2017, 3, 1), datetime(2017, 4, 23)]
-list_filters = [PriceFlightFilter(), StupidPriceFlightFilter(), VisitedCountryExcludeCheapFlightFilter(),
-                TotalPriceFlightFilter(), TimeoutFlightFilter(MAX_SEARCH_TIME_PER_PERIOD)]
 
 list_big_airports = OrderedSet()
 
 best_count_result = 0
 best_cost_result = 0
+best_route_result = []
+
+graph_total = nx.MultiDiGraph()
 
 counter = 0
+figures_count = 0
 for airport in eu_airports:
     counter += 1
     orig_iata = airport[0]
@@ -77,18 +105,60 @@ for airport in eu_airports:
         time_start_period = time.time()
 
         Logger.info("For airport {} selected period: {}".format(orig_iata, date_period))
+
         configuration_requester = RequesterConfiguration(date_period)
-        # try:
-        dfs_composer = DFSComposer()
-        graph = dfs_composer.find_flights(orig_iata, configuration_requester, list_filters)
-        count_result, cost_result, countries_result, route_result = dfs_composer.count_result, \
-                                                                    dfs_composer.cost_result, \
-                                                                    dfs_composer.countries_result, \
-                                                                    dfs_composer.list_flights
-        # except Exception as e:
-        #     Logger.error("Caught very broad exception while processing {} for period {}. "
-        #                  "Exception: {}".format(orig_iata, date_period, str(e)))
-        #     continue
+        composer_ucs = UCSComposer()
+        try:
+            graph = composer_ucs.find_flights(orig_iata, configuration_requester, get_actual_filters(graph_total))
+            count_result, cost_result, countries_result, route_result = composer_ucs.count_result, \
+                                                                        composer_ucs.cost_result, \
+                                                                        composer_ucs.countries_result, \
+                                                                        composer_ucs.list_flights
+            GraphUtil.remove_duplicate_edges(graph)
+            
+            if composer_ucs.queue.qsize() > 0:
+                Logger.info("For airport {} running {} DFS tasks.".format(orig_iata, composer_ucs.queue.qsize()))
+                time_per_dfs = max(min(round(MAX_DFS_SEARCH_TIME_PER_PERIOD / composer_ucs.queue.qsize()),
+                                       MAX_DFS_SEARCH_TIME_PER_INSTANCE),
+                                   MIN_DFS_SEARCH_TIME_PER_INSTANCE)
+                counter_dfs_tasks = 1
+                while not composer_ucs.queue.empty():
+                    hash_code = composer_ucs.queue.get()[1]
+                    city_orig_dfs = composer_ucs.map_routes_queue[hash_code][0]
+                    list_previous_flights = composer_ucs.map_routes_queue[hash_code][1]
+
+                    Logger.info("Running DFS task #{} for airport {}: start from {}.".format(counter_dfs_tasks, orig_iata,
+                                                                                             city_orig_dfs))
+                    counter_dfs_tasks += 1
+                    composer_dfs = DFSComposer()
+                    graph_dfs = composer_dfs.find_flights(city_orig_dfs, configuration_requester,
+                                                          get_actual_filters(graph_total, timeout=time_per_dfs),
+                                                          graph=graph, list_previous_flights=list_previous_flights)
+                    count_result_dfs, cost_result_dfs, countries_result_dfs, route_result_dfs = composer_dfs.count_result, \
+                                                                                                composer_dfs.cost_result, \
+                                                                                                composer_dfs.countries_result, \
+                                                                                                composer_dfs.list_flights
+                    GraphUtil.merge_graphs(graph, graph_dfs)
+
+                    if (len(countries_result_dfs) > count_result) \
+                            | ((len(countries_result_dfs) == count_result) & (cost_result_dfs < cost_result)):
+                        count_result = len(countries_result_dfs)
+                        cost_result = cost_result_dfs
+                        countries_result = countries_result_dfs
+                        route_result = route_result_dfs
+
+            if GRAPH_MERGING_ACTIVATED & (count_result > 0):
+                if (count_result >= MIN_MERGING_COUNT) & (round(cost_result / count_result) < MAX_MERGING_CC):
+                    if DRAWING_ACTIVATED:
+                        figures_count += 1
+                        file_name = "{}_{}_{}-{}".format(counter, datetime.strftime(date_period, "%m"),
+                                                         graph.number_of_nodes(),
+                                                         graph.number_of_edges())
+                        GraphUtil.draw_hierarhical(graph, file_name, figures_count)
+                    GraphUtil.merge_graphs(graph_total, graph)
+        except ValueError as e:
+            Logger.system("Caught very broad Exception. Origin: {}, period: {}, "
+                          "exception message: {}".format(orig_iata, date_period, str(e)))
 
         if (len(countries_result) > period_count_result) \
                 | ((len(countries_result) == period_count_result) & (cost_result < period_cost_result)):
@@ -96,7 +166,7 @@ for airport in eu_airports:
             period_cost_result = cost_result
             period_countries_result = countries_result
             period_route_result = route_result
-        if time.time() - time_start_period > MAX_SEARCH_TIME_PER_PERIOD:
+        if time.time() - time_start_period > MAX_UCS_SEARCH_TIME_PER_PERIOD:
             Logger.info("Airport {} is soo big!".format(orig_iata))
             list_big_airports.add(orig_iata)
 
@@ -146,6 +216,9 @@ for airport in eu_airports:
         best_cost_result = cost_result
         best_countries_result = countries_result
         best_route_result = route_result
+
+GraphUtil.draw_hierarhical(graph_total, "0_total_{}-{}".format(graph_total.number_of_nodes(),
+                                                               graph_total.number_of_edges()), figures_count + 1)
 
 message = GmailAPIUtil.create_message("me", "officialsagorbox@gmail.com",
                                       "[TripMaker] Computations completed", "I finished. Restart me!")

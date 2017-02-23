@@ -12,7 +12,8 @@ DEFAULT_ORIGIN_IATA = ["MOW", "LED", "KGD", "PKV", "BZK", "EGO", "PES", "VOZ"]
 #                        "KZN", "GOJ"]
 
 
-PRINTING_LEVEL = 4
+PRINTING_LEVEL = 3
+PRINT_ROUTES_TO_CONSOLE = False
 
 ORIGIN_DATE_PERIOD = "2017-03-01:month"
 
@@ -34,4 +35,5 @@ PATH_DATA_WORLD_CITIES = os.path.join(DATA_ROOT, 'world_cities.json')
 PATH_DATA_EU_AIRPORTS = os.path.join(DATA_ROOT, 'eu_airports.data')
 PATH_ROUTE_DUMP = os.path.join(INPUT_ROOT, 'route.dump')
 PATH_LOG = os.path.join(PROJECT_ROOT, 'logs')
+PATH_LOG_GRAPHS = os.path.join(PATH_LOG, 'graphs')
 PATH_LOG_MAPS = os.path.join(PATH_LOG, 'maps')

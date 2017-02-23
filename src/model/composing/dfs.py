@@ -73,7 +73,7 @@ class DFSComposer:
                         "visited: {}".format(len(countries_visited), round(total_cost / len(countries_visited)),
                                              total_cost, countries_visited))
             Logger.info("The route:")
-            Logger.info(list_previous_flights.to_json())
+            Logger.info(list_previous_flights.to_json(), is_route=True)
         else:
             Logger.info("[COMPLETED] Nothing found")
 

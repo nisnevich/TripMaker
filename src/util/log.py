@@ -1,7 +1,7 @@
 import logging
 import os
 
-from src.const.constants import PATH_LOG, PRINTING_LEVEL
+from src.const.constants import PATH_LOG, PRINTING_LEVEL, PRINT_ROUTES_TO_CONSOLE
 
 
 class Logger(object):
@@ -20,9 +20,12 @@ class Logger(object):
             print(message)
 
     @staticmethod
-    def info(message):
+    def info(message, is_route=False):
         Logger.__main_logger.info(message)
         if PRINTING_LEVEL <= 3:
+            if is_route:
+                if not PRINT_ROUTES_TO_CONSOLE:
+                    return
             print(message)
 
     @staticmethod

@@ -18,7 +18,7 @@ class TimeoutFlightFilter(FlightFilter):
         time_delta = time.time() - self.time_start
 
         if time_delta > self.timeout:
-            Logger.debug("Stopping DFS as time limit ({} sec) "
+            Logger.debug("Stopping search as time limit ({} sec) "
                          "has exceeded ({} passed)".format(self.timeout, time_delta))
             return False
         return True

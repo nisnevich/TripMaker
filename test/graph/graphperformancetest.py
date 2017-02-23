@@ -8,7 +8,7 @@ import time
 from src.entity.flight import Flight
 
 LENGTH_KEY = 3
-COUNT_OF_NODES = 4000
+COUNT_OF_NODES = 2000
 
 s = []
 start = time.time()
