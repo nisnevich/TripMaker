@@ -5,12 +5,11 @@ from src.util.log import Logger
 
 
 class TimeoutFlightFilter(FlightFilter):
-    time_start = 0
-    timeout = 0
 
     def __init__(self, timeout):
         super().__init__()
         self.timeout = timeout
+        self.time_start = 0
 
     def filter_return(self, flight, list_flights, graph):
         if self.time_start == 0:

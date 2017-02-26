@@ -8,13 +8,14 @@ import requests
 # ----- Local imports
 from src.const.constants import ORIGIN_DATE_PERIOD, DATE_FORMAT, AS_ACCESS_TOKEN, TIMEOUT_SLEEP_CONNECTION_ERROR
 from src.entity.flight import Flight
-from src.model.requesting.asl.dto.flightadapter import ASFlightDTOAdapter
+from src.model.requesting.dto.flightadapter import ASFlightDTOAdapter
 from src.util.distance import DistanceUtil
 from src.util.log import Logger
 from src.util.progressbar import print_progress_bar
 
 # The value of 2000 for this parameter reduces the requesting time TENFOLD!
-MAX_CITY_DISTANCE = 2000
+MAX_CITY_DISTANCE = 3000
+
 
 # TODO refactor this method according to new architecture
 def get_lowest_prices_flights_list(orig_iata, date_from=None, date_to=None):

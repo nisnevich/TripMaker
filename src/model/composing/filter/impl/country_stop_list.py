@@ -11,7 +11,7 @@ class CountriesStopListFlightFilter(FlightFilter):
         self.countries_stop_list = countries_stop_list
 
     def filter_continue(self, flight, list_flights, graph):
-        if flight.dest_country == self.countries_stop_list:
+        if flight.dest_country in self.countries_stop_list:
             Logger.debug(("[IGNORE:DENIED_COUNTRY] Breaking trip on the flight from {} to {} (for {} rub): "
                           "found {} in stop list!").format(flight.orig_city, flight.dest_city,
                                                            flight.price, flight.dest_country))

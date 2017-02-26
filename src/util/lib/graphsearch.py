@@ -2,6 +2,10 @@
 """
 Shortest path algorithms for weighed graphs.
 """
+from datetime import datetime, timedelta
+
+import sys
+
 __author__ = """\n""".join(['Aric Hagberg <hagberg@lanl.gov>',
                             'Loïc Séguin-C. <loicseguin@gmail.com>',
                             'Dan Schult <dschult@colgate.edu>'])
@@ -297,7 +301,8 @@ def single_source_dijkstra(G, source, target=None, cutoff=None, weight='weight',
                      target=target)
 
 
-def _dijkstra(G, source, get_weight, pred=None, paths=None, cutoff=None,
+# FIXME move default delta_days values anywhere
+def _dijkstra(G, source, get_weight, delta_days_min=1, delta_days_max=7, pred=None, paths=None, cutoff=None,
               target=None):
     """Implementation of Dijkstra's algorithm
 
@@ -342,43 +347,62 @@ def _dijkstra(G, source, get_weight, pred=None, paths=None, cutoff=None,
     push = heappush
     pop = heappop
     dist = {}  # dictionary of final distances
-    seen = {source: 0}
+    seen = {source: {"0": 0}} # MODIFIED: added "0" as start date
     c = count()
     fringe = []  # use heapq with (distance,label) tuples
-    push(fringe, (0, next(c), source))
+    push(fringe, (0, next(c), source, "0")) # MODIFIED: added "0" as start date
     while fringe:
-        (d, _, v) = pop(fringe)
+        (d, _, v, date) = pop(fringe)
         if v in dist:
             continue
-        dist[v] = d
-        if v == target:
+        else:
+            dist[v] = {}
+        dist[v][date] = d
+        if target is not None and v == target:
             break
-
         for u, e in G_succ[v].items():
-            cost = get_weight(v, u, e, fringe=fringe, cost=dist[v], counter=c, push=push) # MODIFIED: added kwargs
-            if cost is None:
-                continue
-            vu_dist = dist[v] + cost # MODIFIED: removed repeated call of 'get_weight' (because it works with queue)
-            # if cutoff is not None:
-            #     if vu_dist > cutoff:
-            #         continue
-            if u in dist:
-                if vu_dist < dist[u]:
-                    raise ValueError('Contradictory paths found:',
-                                     'negative weights?')
-            elif u not in seen or vu_dist < seen[u]:
-                seen[u] = vu_dist
-                push(fringe, (vu_dist, next(c), u))
-                if paths is not None:
-                    paths[u] = paths[v] + [u]
-                # if pred is not None:
-                #     pred[u] = [v]
-            # elif vu_dist == seen[u]:
-            #     if pred is not None:
-            #         pred[u].append(v)
+            for e_index in e: # MODIFIED: added multiple edges
+                cost = get_weight(v, u, e_index)
+                if cost is None:
+                    continue
+                
+                flight = e[e_index]["flight"]
+                # Calculation of minimal cost of flying from departure point
+                price_min = sys.maxsize
+                date_to = flight.depart_date - timedelta(delta_days_min)
+                date_from = flight.depart_date - timedelta(delta_days_max)
+                for date_origin in dist[v]:
+                    if isinstance(date_origin, datetime): # to prevent error with first vertex
+                        if date_from <= date_origin <= date_to and price_min > dist[v][date_origin]:
+                            price_min = dist[v][date_origin]
+                    else:
+                        price_min = 0
+                if price_min == sys.maxsize:
+                    continue
 
-    if paths is not None:
-        return (dist, paths)
+                vu_dist = price_min + cost # MODIFIED: removed repeated call of 'get_weight'
+                # if cutoff is not None:
+                #     if vu_dist > cutoff:
+                #         continue
+                if u in dist:
+                    if date in dist[u] and vu_dist < dist[u][date]: # MODIFIED: checking date existance
+                        raise ValueError('Contradictory paths found:',
+                                         'negative weights?')
+                elif u not in seen or date not in seen[u] or vu_dist < seen[u][date]: # MODIFIED: checking date existance
+                    if u not in seen:
+                        seen[u] = {}
+                    seen[u][date] = vu_dist
+                    push(fringe, (vu_dist, next(c), u, flight.depart_date))
+                    # if paths is not None: # TODO if need paths
+                    #     paths[u] = paths[v] + [u]
+                    # if pred is not None:
+                    #     pred[u] = [v]
+                # elif vu_dist == seen[u]:
+                #     if pred is not None:
+                #         pred[u].append(v)
+
+    # if paths is not None: # TODO if need paths
+    #     return (dist, paths)
     if pred is not None:
         return (pred, dist)
     return dist

@@ -3,8 +3,6 @@ from src.util.log import Logger
 
 
 class VisitedGlobalEdgeFlightFilter(FlightFilter):
-    graph_global = None
-
     def __init__(self, graph_global):
         super().__init__()
         self.graph_global = graph_global

@@ -5,11 +5,6 @@ from src.entity.flight import IFlightDTOAdapter
 
 
 class ASFlightDTOAdapter(IFlightDTOAdapter):
-    origin = None
-    destination = None
-    depart_date = None
-    value = None
-    found_at = None
 
     def get_orig_city(self):
         return self.origin

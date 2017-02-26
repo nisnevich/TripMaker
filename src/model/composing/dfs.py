@@ -1,36 +1,14 @@
 import networkx as nx
 
 from src.entity.flightroute import FlightsRoute
+from src.model.composing.composer_abstract import AbstractComposer
 from src.model.requesting.service_requester import RequesterService
 from src.util.country import CountryUtil
 from src.util.log import Logger
 from src.util.orderedset import OrderedSet
 
 
-class DFSComposer:
-    count_result = 0
-    cost_result = 0
-    countries_result = {}
-    list_flights = []
-
-    def filter_continue(self, flight, list_previous_flights, graph, list_filters):
-        for filt in list_filters:
-            filt.filter_info(flight, list_previous_flights, graph)
-            if not filt.filter_continue(flight, list_previous_flights, graph):
-                return False
-        return True
-
-    def filter_break(self, flight, list_previous_flights, graph, list_filters):
-        for filt in list_filters:
-            if not filt.filter_break(flight, list_previous_flights, graph):
-                return False
-        return True
-
-    def filter_return(self, flight, list_previous_flights, graph, list_filters):
-        for filt in list_filters:
-            if not filt.filter_return(flight, list_previous_flights, graph):
-                return False
-        return True
+class DFSComposer(AbstractComposer):
 
     def find_flights(self, city_orig, config_requester, list_filters=[], graph=None,
                      list_previous_flights=FlightsRoute()):
@@ -85,12 +63,3 @@ class DFSComposer:
             self.list_flights = list_previous_flights
 
         return graph
-
-    def get_statistics(self, list_flights):
-        countries_visited = OrderedSet()
-        total_cost = 0
-        for f in list_flights:
-            countries_visited.add(f.orig_country)
-            countries_visited.add(f.dest_country)
-            total_cost += f.price
-        return countries_visited, total_cost

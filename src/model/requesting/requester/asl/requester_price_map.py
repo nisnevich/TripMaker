@@ -2,11 +2,13 @@
 from datetime import datetime
 
 # ----- Third-party imports
+from time import sleep
+
 import requests
 from dateutil.relativedelta import *
 
 # ----- Local imports
-from src.const.constants import DATE_FORMAT
+from src.const.constants import DATE_FORMAT, TIMEOUT_SLEEP_CONNECTION_ERROR
 from src.entity.flight import Flight
 from src.model.requesting.dto.flightadapter import ASFlightDTOAdapter
 from src.model.requesting.requester.requester_abstract import AbstractPriceMapRequester
@@ -28,7 +30,9 @@ class ASPricesMapRequester(AbstractPriceMapRequester):
 
             request = ("http://map.aviasales.ru/prices.json?origin_iata={city_origin}&period={period}"
                        "&one_way=true").format(city_origin=city_origin, period=period)
-            flights_data = requests.get(request).json()
+
+            flights_data = AbstractPriceMapRequester.send_get(request)
+
             if "errors" in flights_data:
                 Logger.debug("Response from API contains a error. error={}, orig_iata={}, date_from={}, "
                              "date_to={}, period={}".format(flights_data["errors"], city_origin, date_from,

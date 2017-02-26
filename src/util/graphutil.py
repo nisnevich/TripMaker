@@ -77,8 +77,10 @@ class GraphUtil:
     def draw_hierarhical(graph_draw, graph_name, figures_count):
         path_dot = os.path.join(PATH_LOG_GRAPHS, 'dots/{}.dot'.format(graph_name))
         path_image = os.path.join(PATH_LOG_GRAPHS, 'images/{}.png'.format(graph_name))
+        path_dump = os.path.join(PATH_LOG_GRAPHS, 'dumps_pickle/{}.png'.format(graph_name))
         write_dot(graph_draw, path_dot)
         pydotplus.graph_from_dot_file(path_dot).write_png(path_image)
+        nx.write_gpickle(graph_draw, path_dump)
 
     @staticmethod
     def show(graph_draw, figures_count=0):

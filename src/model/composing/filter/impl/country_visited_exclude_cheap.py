@@ -4,7 +4,9 @@ from src.util.log import Logger
 
 class VisitedCountryExcludeCheapFlightFilter(VisitedCountryFlightFilter):
 
-    is_next_continue_enabled = True
+    def __init__(self):
+        super().__init__()
+        self.is_next_continue_enabled = True
 
     def filter_info(self, flight, list_flights, graph):
         if (flight.orig_country == flight.dest_country) & (flight.price <= self.max_bill_price_inside_country):

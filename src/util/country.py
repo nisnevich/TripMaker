@@ -32,6 +32,24 @@ class CountryUtil:
 
     @staticmethod
     def get_info(iata):
+        '''
+            Returns information about the city by iata or None, if the IATA was not found
+            Format:
+            {
+                "code": "SCE",
+                "name": "State College",
+                "coordinates": {"lon":-77.84823, "lat":40.85372},
+                "time_zone": "America/New_York",
+                "name_translations": {
+                    "de":"State College","en":"State College","zh-CN":"大学城","tr":"State College",
+                    "ru":"Стейт Колледж","it":"State College","es":"State College","fr":"State College",
+                    "th":"สเตทคอลเลจ"
+                },
+                "country_code": "US"
+            }
+        :param iata:
+        :return:
+        '''
         for city in CountryUtil.world_cities_list:
             if city["code"] == iata:
                 return city
