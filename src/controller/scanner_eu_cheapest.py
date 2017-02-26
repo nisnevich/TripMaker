@@ -166,6 +166,8 @@ for airport in eu_airports:
                                                             graph.number_of_nodes(),
                                                             graph.number_of_edges())
                         GraphUtil.draw_hierarhical(graph, file_name, figures_count)
+                        Logger.debug("Drawing for count={}, cc={}: graph {}, from {}"
+                                     "".format(count_result, round(cost_result / count_result), file_name, orig_iata))
                     GraphUtil.merge_graphs(graph_total, graph)
 
             if (count_result >= 14) and (round(cost_result / count_result) <= 1100):

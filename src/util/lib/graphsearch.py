@@ -6,6 +6,10 @@ from datetime import datetime, timedelta
 
 import sys
 
+from src.const.constants import MIN_DAYS_PER_COUNTRY, MAX_DAYS_PER_COUNTRY
+
+DATE_ORIGIN_DEFAULT = "0"
+
 __author__ = """\n""".join(['Aric Hagberg <hagberg@lanl.gov>',
                             'Loïc Séguin-C. <loicseguin@gmail.com>',
                             'Dan Schult <dschult@colgate.edu>'])
@@ -296,14 +300,14 @@ def single_source_dijkstra(G, source, target=None, cutoff=None, weight='weight',
         else:
             get_weight = lambda u, v, data: data.get(weight, 1)
 
-    paths = {source: [source]}  # dictionary of paths
+    paths = {source: {DATE_ORIGIN_DEFAULT: [source]}}  # MODIFIED: dictionary of paths by dates
     return _dijkstra(G, source, get_weight, paths=paths, cutoff=cutoff,
                      target=target)
 
 
 # FIXME move default delta_days values anywhere
-def _dijkstra(G, source, get_weight, delta_days_min=1, delta_days_max=7, pred=None, paths=None, cutoff=None,
-              target=None):
+def _dijkstra(G, source, get_weight, delta_days_min=MIN_DAYS_PER_COUNTRY, delta_days_max=MAX_DAYS_PER_COUNTRY,
+              pred=None, paths=None, cutoff=None, target=None):
     """Implementation of Dijkstra's algorithm
 
     Parameters
@@ -347,10 +351,10 @@ def _dijkstra(G, source, get_weight, delta_days_min=1, delta_days_max=7, pred=No
     push = heappush
     pop = heappop
     dist = {}  # dictionary of final distances
-    seen = {source: {"0": 0}} # MODIFIED: added "0" as start date
+    seen = {source: {DATE_ORIGIN_DEFAULT: 0}} # MODIFIED: added "0" as start date
     c = count()
     fringe = []  # use heapq with (distance,label) tuples
-    push(fringe, (0, next(c), source, "0")) # MODIFIED: added "0" as start date
+    push(fringe, (0, next(c), source, DATE_ORIGIN_DEFAULT)) # MODIFIED: added "0" as start date
     while fringe:
         (d, _, v, date) = pop(fringe)
         if v in dist:
@@ -361,22 +365,27 @@ def _dijkstra(G, source, get_weight, delta_days_min=1, delta_days_max=7, pred=No
         if target is not None and v == target:
             break
         for u, e in G_succ[v].items():
+            # if u == "KRK":
+            #     print()
             for e_index in e: # MODIFIED: added multiple edges
-                cost = get_weight(v, u, e_index)
+                cost = get_weight(e, e_index)
                 if cost is None:
                     continue
                 
                 flight = e[e_index]["flight"]
                 # Calculation of minimal cost of flying from departure point
                 price_min = sys.maxsize
+                date_origin_selected = None
                 date_to = flight.depart_date - timedelta(delta_days_min)
                 date_from = flight.depart_date - timedelta(delta_days_max)
                 for date_origin in dist[v]:
                     if isinstance(date_origin, datetime): # to prevent error with first vertex
                         if date_from <= date_origin <= date_to and price_min > dist[v][date_origin]:
                             price_min = dist[v][date_origin]
+                            date_origin_selected = date_origin
                     else:
                         price_min = 0
+                        date_origin_selected = DATE_ORIGIN_DEFAULT
                 if price_min == sys.maxsize:
                     continue
 
@@ -393,16 +402,18 @@ def _dijkstra(G, source, get_weight, delta_days_min=1, delta_days_max=7, pred=No
                         seen[u] = {}
                     seen[u][date] = vu_dist
                     push(fringe, (vu_dist, next(c), u, flight.depart_date))
-                    # if paths is not None: # TODO if need paths
-                    #     paths[u] = paths[v] + [u]
+                    if paths is not None:
+                        if u not in paths:
+                            paths[u] = {}
+                        paths[u][flight.depart_date] = paths[v][date_origin_selected] + [flight]
                     # if pred is not None:
                     #     pred[u] = [v]
                 # elif vu_dist == seen[u]:
                 #     if pred is not None:
                 #         pred[u].append(v)
 
-    # if paths is not None: # TODO if need paths
-    #     return (dist, paths)
+    if paths is not None:
+        return (dist, paths)
     if pred is not None:
         return (pred, dist)
     return dist

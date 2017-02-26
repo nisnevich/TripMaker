@@ -4,6 +4,7 @@ import networkx as nx
 import sys
 
 from src.entity.flight import Flight
+from src.util.graphutil import GraphUtil
 from src.util.lib.graphsearch import single_source_dijkstra
 
 G = nx.MultiDiGraph()
@@ -86,7 +87,7 @@ G.add_edge("BER", "MOW", flight=f)
 #             kwargs["push"](kwargs["fringe"], (price, next(kwargs["counter"]), b))
 #         return None # TODO check if it is correct to return None in this case
 
-def get_weight(a, b, e_index):
-    return G[a][b][e_index]["flight"].price
+def get_weight(e, e_index):
+    return e[e_index]["flight"].price
 
 print(single_source_dijkstra(G, "KJA", get_weight=get_weight))
