@@ -7,6 +7,7 @@ class VisitedGlobalEdgeFlightFilter(FlightFilter):
         super().__init__()
         self.graph_global = graph_global
 
+    # TODO does this filter do the same as edge_visited? Inheritance may be useful
     def filter_continue(self, flight, list_flights, graph):
         if flight.orig_city in self.graph_global:
             if flight.dest_city in self.graph_global[flight.orig_city]:

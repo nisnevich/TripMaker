@@ -50,7 +50,7 @@ Search links:
 TripMaker bot
 '''
 
-MAX_UCS_SEARCH_TIME_PER_PERIOD = 120
+MAX_UCS_SEARCH_TIME_PER_PERIOD = 180
 MAX_DFS_SEARCH_TIME_PER_PERIOD = 255 * 3
 MAX_DFS_SEARCH_TIME_PER_INSTANCE = 30
 MIN_DFS_SEARCH_TIME_PER_INSTANCE = 15
@@ -68,8 +68,18 @@ DRAWING_ACTIVATED = True
 
 
 def get_actual_filters(graph_global, timeout=MAX_UCS_SEARCH_TIME_PER_PERIOD):
-    return [PriceFlightFilter(), StupidPriceFlightFilter(), VisitedCountryExcludeCheapFlightFilter(),
-            TotalPriceFlightFilter(), TimeoutFlightFilter(timeout)]
+    # filter_price = PriceFlightFilter()
+    # filter_price.max_bill_price_ru = 4000
+    # filter_price.max_bill_price_eu = 3000
+    # filter_price.max_bill_price_generic = 4000
+
+    # filter_price_total = TotalPriceFlightFilter()
+    # filter_price_total.max_total_price = 25000
+
+    # return [TimeoutFlightFilter(timeout), filter_price, filter_price_total]
+    return [PriceFlightFilter(), StupidPriceFlightFilter(), TotalPriceFlightFilter(), TimeoutFlightFilter(timeout)
+
+            ]
     # VisitedEdgeFlightFilter(), TODO
     # VisitedGlobalEdgeFlightFilter(graph_global)
 
@@ -80,7 +90,7 @@ instance_id = random.getrandbits(12)
 Logger.debug("Started instance {}".format(instance_id))
 
 eu_airports_list = open(PATH_DATA_EU_AIRPORTS, 'r').read().splitlines()
-eu_airports = [x.split("\t") for x in eu_airports_list]
+eu_airports = [[orig_iata, "", ""] for orig_iata in DEFAULT_ORIGIN_IATA] + [x.split("\t") for x in eu_airports_list]
 
 # actual for 2017-02-16 23:16
 # the first 6-th are the biggest
@@ -89,7 +99,7 @@ biggest_eu_airports_list = ['BRU', 'SOF', 'BLL', 'CPH', 'CGN', 'GDN', 'VIE', 'PF
                             'WRO', 'FAO', 'OPO', 'TSR', 'BTS', 'ALC', 'BCN', 'MAD', 'MAN']
 # biggest_eu_airports_list = ['OSR']
 
-date_period_list = [datetime(2017, 2, 23), datetime(2017, 3, 1), datetime(2017, 4, 23)]
+date_period_list = [datetime(2017, 2, 28), datetime(2017, 3, 28), datetime(2017, 4, 28)]
 
 list_big_airports = OrderedSet()
 
@@ -159,28 +169,28 @@ for airport in eu_airports:
             #             route_result = route_result_dfs
 
             if GRAPH_MERGING_ACTIVATED & (count_result > 0):
-                if (count_result >= MIN_MERGING_COUNT) & (round(cost_result / count_result) < MAX_MERGING_CC):
-                    if DRAWING_ACTIVATED:
-                        figures_count += 1
-                        file_name = "{}_{}_{}_{}-{}".format(instance_id, counter, datetime.strftime(date_period, "%m"),
-                                                            graph.number_of_nodes(),
-                                                            graph.number_of_edges())
-                        GraphUtil.draw_hierarhical(graph, file_name, figures_count)
-                        Logger.debug("Drawing for count={}, cc={}: graph {}, from {}"
-                                     "".format(count_result, round(cost_result / count_result), file_name, orig_iata))
-                    GraphUtil.merge_graphs(graph_total, graph)
+                # if (count_result >= MIN_MERGING_COUNT) & (round(cost_result / count_result) < MAX_MERGING_CC):
+                if DRAWING_ACTIVATED:
+                    figures_count += 1
+                    file_name = "{}_{}_{}_{}-{}".format(instance_id, counter, datetime.strftime(date_period, "%m"),
+                                                        graph.number_of_nodes(),
+                                                        graph.number_of_edges())
+                    GraphUtil.draw_hierarhical(graph, file_name, figures_count)
+                    Logger.debug("Drawing for count={}, cc={}: graph {}, from {}"
+                                 "".format(count_result, round(cost_result / count_result), file_name, orig_iata))
+                GraphUtil.merge_graphs(graph_total, graph)
 
-            if (count_result >= 14) and (round(cost_result / count_result) <= 1100):
-                Logger.info("Starting process to search for routes! Route description: ({}-{} at {}-{})"
-                            "".format(route_result[0].orig_city, route_result[-1].dest_city,
-                                      datetime.strftime(route_result[0].depart_date, DATE_FORMAT),
-                                      datetime.strftime(route_result[-1].depart_date, DATE_FORMAT)))
-                if __name__ == '__main__':
-                    controller_start = StartDockingCallableController()
-                    controller_finish = FinishDockingCallableController()
-                    Thread(target=controller_start.dock(route=route_result)).start()
-                    Thread(target=controller_finish.dock(route=route_result)).start()
-                counter_threads_total += 1
+                # if (count_result >= 14) and (round(cost_result / count_result) <= 1100):
+                #     Logger.info("Starting process to search for routes! Route description: ({}-{} at {}-{})"
+                #                 "".format(route_result[0].orig_city, route_result[-1].dest_city,
+                #                           datetime.strftime(route_result[0].depart_date, DATE_FORMAT),
+                #                           datetime.strftime(route_result[-1].depart_date, DATE_FORMAT)))
+                #     if __name__ == '__main__':
+                #         controller_start = StartDockingCallableController()
+                #         controller_finish = FinishDockingCallableController()
+                #         Thread(target=controller_start.dock(route=route_result)).start()
+                #         Thread(target=controller_finish.dock(route=route_result)).start()
+                #     counter_threads_total += 1
 
         except ValueError as e:
             Logger.system("Caught very broad Exception. Origin: {}, period: {}, "
@@ -205,41 +215,47 @@ for airport in eu_airports:
         Logger.info("The route:")
         Logger.info(period_route_result.to_json())
 
-        # if (period_count_result >= 14) and (round(period_cost_result / period_count_result) <= 1100):
-        #     controller = StartDockingCallableController()
-        #     Logger.info("Starting process to search for routes! Route description: ({}-{} at {}-{})"
-        #                 "".format(period_route_result[0].orig_city, period_route_result[-1].dest_city,
-        #                           datetime.strftime(period_route_result[0].depart_date, DATE_FORMAT),
-        #                           datetime.strftime(period_route_result[-1].depart_date, DATE_FORMAT)))
-        #     process = Process(target=controller.dock(route=period_route_result))
-        #     process.start()
+        if DRAWING_ACTIVATED:
+            GraphUtil.draw_hierarhical(graph_total,
+                                       "{}_bak_{}-{}".format(instance_id, graph_total.number_of_nodes(),
+                                                             graph_total.number_of_edges()), figures_count + 1)
 
-        # cool_condition_1 = ((period_count_result >= 15) & (round(period_cost_result / period_count_result) <= 1000))
-        # cool_condition_2 = ((period_count_result > 10) & (round(period_cost_result / period_count_result) <= 500))
-        # if cool_condition_1 | cool_condition_2:
-        #     cool_status = "AMAZINGLY COOL" if cool_condition_1 else "pretty cool"
-        #
-        #     links_list = []
-        #     for flight in period_route_result:
-        #         links_list.append(BrowserUtil.create_link(flight))
-        #     links_message = "\n".join(links_list)
-        #
-        #     subject = "[TripMaker] {} route: {} countries, " \
-        #               "{} rub ({} r/c)".format(cool_status, period_count_result, period_cost_result,
-        #                                        round(period_cost_result / period_count_result))
-        #
-        #     start_point = "{} ({}, {})".format(*airport)
-        #     finish_point = period_route_result[-1].dest_city
-        #
-        #     body = body_route.format(count_countries=period_count_result, price=period_cost_result,
-        #                              cc=round(period_cost_result / period_count_result),
-        #                              start_point=start_point, finish_point=finish_point,
-        #                              countries_visited=period_countries_result, cool_status=cool_status,
-        #                              dump=period_route_result.to_json(), links=links_message)
-        #     message = GmailAPIUtil.create_message("me", "officialsagorbox@gmail.com", subject, body)
-        #
-        #     GmailAPIUtil.send_message(GmailAPIUtil.create_service(), "me", message)
-        #     Logger.error("Sending: {}".format(subject))
+
+            # if (period_count_result >= 14) and (round(period_cost_result / period_count_result) <= 1100):
+            #     controller = StartDockingCallableController()
+            #     Logger.info("Starting process to search for routes! Route description: ({}-{} at {}-{})"
+            #                 "".format(period_route_result[0].orig_city, period_route_result[-1].dest_city,
+            #                           datetime.strftime(period_route_result[0].depart_date, DATE_FORMAT),
+            #                           datetime.strftime(period_route_result[-1].depart_date, DATE_FORMAT)))
+            #     process = Process(target=controller.dock(route=period_route_result))
+            #     process.start()
+
+            # cool_condition_1 = ((period_count_result >= 15) & (round(period_cost_result / period_count_result) <= 1000))
+            # cool_condition_2 = ((period_count_result > 10) & (round(period_cost_result / period_count_result) <= 500))
+            # if cool_condition_1 | cool_condition_2:
+            #     cool_status = "AMAZINGLY COOL" if cool_condition_1 else "pretty cool"
+            #
+            #     links_list = []
+            #     for flight in period_route_result:
+            #         links_list.append(BrowserUtil.create_link(flight))
+            #     links_message = "\n".join(links_list)
+            #
+            #     subject = "[TripMaker] {} route: {} countries, " \
+            #               "{} rub ({} r/c)".format(cool_status, period_count_result, period_cost_result,
+            #                                        round(period_cost_result / period_count_result))
+            #
+            #     start_point = "{} ({}, {})".format(*airport)
+            #     finish_point = period_route_result[-1].dest_city
+            #
+            #     body = body_route.format(count_countries=period_count_result, price=period_cost_result,
+            #                              cc=round(period_cost_result / period_count_result),
+            #                              start_point=start_point, finish_point=finish_point,
+            #                              countries_visited=period_countries_result, cool_status=cool_status,
+            #                              dump=period_route_result.to_json(), links=links_message)
+            #     message = GmailAPIUtil.create_message("me", "officialsagorbox@gmail.com", subject, body)
+            #
+            #     GmailAPIUtil.send_message(GmailAPIUtil.create_service(), "me", message)
+            #     Logger.error("Sending: {}".format(subject))
     else:
         Logger.info("Nothing found for {} ({}, {})".format(*airport))
 
